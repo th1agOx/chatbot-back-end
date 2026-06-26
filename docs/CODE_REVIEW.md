@@ -1,6 +1,6 @@
 # Code Review — Chatbot API
 
-> **Data:** 25/06/2026  
+> **Data:** 26/06/2026  
 > **Revisor:** Arquiteto de Software  
 > **Escopo:** Código existente (excluindo service/repository/mapper — sob responsabilidade de outro colaborador)
 
@@ -8,12 +8,12 @@
 
 ## Sumário
 
-| Gravidade | Qtd |
-|-----------|-----|
-| 🔴 Crítico (impede build ou funcionamento) | 3 |
-| 🟡 Alto (comportamento incorreto) | 7 |
-| 🔵 Médio (violação de boas práticas) | 4 |
-| ⚪ Baixo (cosmético/sugestão) | 3 |
+| Gravidade                                  | Qtd |
+| ------------------------------------------ | --- |
+| 🔴 Crítico (impede build ou funcionamento) | 3   |
+| 🟡 Alto (comportamento incorreto)          | 7   |
+| 🔵 Médio (violação de boas práticas)       | 4   |
+| ⚪ Baixo (cosmético/sugestão)              | 3   |
 
 ---
 
@@ -24,7 +24,7 @@
 **Arquivo:** `pom.xml:8`  
 **Problema:** A versão `4.1.0` do `spring-boot-starter-parent` não existe no ecossistema Spring. Spring Boot 4 não foi lançado (atualmente o stable é 3.3.x ou 3.4.x).  
 **Impacto:** Build quebra imediatamente (`mvn compile` falha).  
-**Correção:**  
+**Correção:**
 
 ```xml
 <parent>
@@ -42,14 +42,14 @@
 **Arquivo:** `pom.xml:35,51,71-89`  
 **Problema:** Os seguintes artifact IDs não existem no ecossistema Spring Boot oficial:
 
-| Linha | Artifact |
-|-------|----------|
-| 35 | `spring-boot-h2console` |
-| 51 | `spring-boot-starter-webmvc` (correto: `spring-boot-starter-web`) |
-| 72 | `spring-boot-starter-data-jpa-test` |
-| 76 | `spring-boot-starter-flyway-test` |
-| 80 | `spring-boot-starter-validation-test` |
-| 84 | `spring-boot-starter-webmvc-test` |
+| Linha | Artifact                                                          |
+| ----- | ----------------------------------------------------------------- |
+| 35    | `spring-boot-h2console`                                           |
+| 51    | `spring-boot-starter-webmvc` (correto: `spring-boot-starter-web`) |
+| 72    | `spring-boot-starter-data-jpa-test`                               |
+| 76    | `spring-boot-starter-flyway-test`                                 |
+| 80    | `spring-boot-starter-validation-test`                             |
+| 84    | `spring-boot-starter-webmvc-test`                                 |
 
 **Impacto:** Maven não resolve essas dependências → build falha.  
 **Correção:** Substituir por:
@@ -88,11 +88,11 @@ Remover `spring-boot-h2console`, `spring-boot-starter-*-test` (exceto `spring-bo
 
 ### 2.1 Entities: Nomes de tabela divergentes do Flyway (3 ocorrências)
 
-| Arquivo | `@Table(name = ...)` | Esperado (Flyway) |
-|---------|---------------------|-------------------|
+| Arquivo                       | `@Table(name = ...)`      | Esperado (Flyway)        |
+| ----------------------------- | ------------------------- | ------------------------ |
 | `entity/Conversation.java:22` | `conversation` (singular) | `conversations` (plural) |
-| `entity/Message.java:24` | `message` (singular) | `messages` (plural) |
-| `entity/Attachment.java:21` | `attachment` (singular) | `attachments` (plural) |
+| `entity/Message.java:24`      | `message` (singular)      | `messages` (plural)      |
+| `entity/Attachment.java:21`   | `attachment` (singular)   | `attachments` (plural)   |
 
 **Problema:** As migrations Flyway (V1, V2, V3) criam as tabelas no plural conforme a especificação (`conversations`, `messages`, `attachments`). As entidades JPA apontam para nomes no singular.  
 **Impacto:** `NoSuchTableException` em runtime — a aplicação sobe mas qualquer operação JPA falha.  
@@ -130,7 +130,7 @@ E nos casos de Message e Attachment, `@PrePersist` para `createdAt`/`uploadDate`
 **Arquivo:** `entity/Attachment.java:43-44`  
 **Problema:** A coluna `size` é uma palavra-chave reservada no H2 (e em alguns bancos SQL).  
 **Impacto:** Pode causar erro de sintaxe SQL em certos contextos ou limitação em queries futuras.  
-**Correção:**  
+**Correção:**
 
 ```java
 @Column(name = "file_size", nullable = false)
@@ -155,7 +155,7 @@ Atualizar também o DTO `AttachmentResponse` e a migration V3 se já existir.
 **Arquivo:** `dto/response/ErrorResponse.java:6-11`  
 **Problema:** A especificação define `ErrorResponse` com campo `path` (caminho da requisição que gerou o erro). O código atual tem `List<String> details` no lugar.  
 **Impacto:** Respostas de erro inconsistentes com o contrato da API — consumidores esperam `path` e não `details`.  
-**Correção:**  
+**Correção:**
 
 ```java
 public record ErrorResponse(
@@ -332,28 +332,28 @@ spring:
 
 ## 5. Resumo por Arquivo
 
-| Arquivo | Achados |
-|---------|---------|
-| `pom.xml` | 🔴 Parent 4.1.0; 🔴 6 dependências inválidas; 🔴 Falta Swagger, Web, Test |
-| `ChatbotApiApplication.java` | ✅ OK |
-| `config/SwaggerConfig.java` | 🔴 Não compila sem dep. Swagger; ⚪ Renomear |
-| `controller/HealthController.java` | ✅ OK |
-| `controller/ConversationController.java` | ✅ OK |
-| `controller/ChatController.java` | 🟡 201 → 200 OK |
-| `controller/FileController.java` | ✅ OK (depende de FileService) |
-| `entity/Conversation.java` | 🟡 @Table singular; 🟡 sem @PrePersist |
-| `entity/Message.java` | 🟡 @Table singular; 🟡 sem @PrePersist |
-| `entity/Attachment.java` | 🟡 @Table singular; 🟡 sem @PrePersist; 🟡 coluna `size` |
-| `enums/MessageRole.java` | ✅ OK |
-| `dto/request/*.java` | ✅ OK |
-| `dto/response/ErrorResponse.java` | 🟡 falta `path` |
-| `dto/response/HealthResponse.java` | ⚪ @JsonProperty redundante |
-| `dto/response/*.java` (demais) | ✅ OK |
-| `exception/GlobalExceptionHandler.java` | 🟡 sem path; 🟡 falta HttpMessageNotReadable; 🟡 suprime msg real |
-| `exception/*.java` (demais) | ✅ OK |
-| `ChatbotApiApplicationTests.java` | ✅ OK |
-| `application.properties` | 🔵 sem H2/Flyway/JPA config |
-| `db/migration/` | 🔵 vazio — sem migrations |
+| Arquivo                                  | Achados                                                                   |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| `pom.xml`                                | 🔴 Parent 4.1.0; 🔴 6 dependências inválidas; 🔴 Falta Swagger, Web, Test |
+| `ChatbotApiApplication.java`             | ✅ OK                                                                     |
+| `config/SwaggerConfig.java`              | 🔴 Não compila sem dep. Swagger; ⚪ Renomear                              |
+| `controller/HealthController.java`       | ✅ OK                                                                     |
+| `controller/ConversationController.java` | ✅ OK                                                                     |
+| `controller/ChatController.java`         | 🟡 201 → 200 OK                                                           |
+| `controller/FileController.java`         | ✅ OK (depende de FileService)                                            |
+| `entity/Conversation.java`               | 🟡 @Table singular; 🟡 sem @PrePersist                                    |
+| `entity/Message.java`                    | 🟡 @Table singular; 🟡 sem @PrePersist                                    |
+| `entity/Attachment.java`                 | 🟡 @Table singular; 🟡 sem @PrePersist; 🟡 coluna `size`                  |
+| `enums/MessageRole.java`                 | ✅ OK                                                                     |
+| `dto/request/*.java`                     | ✅ OK                                                                     |
+| `dto/response/ErrorResponse.java`        | 🟡 falta `path`                                                           |
+| `dto/response/HealthResponse.java`       | ⚪ @JsonProperty redundante                                               |
+| `dto/response/*.java` (demais)           | ✅ OK                                                                     |
+| `exception/GlobalExceptionHandler.java`  | 🟡 sem path; 🟡 falta HttpMessageNotReadable; 🟡 suprime msg real         |
+| `exception/*.java` (demais)              | ✅ OK                                                                     |
+| `ChatbotApiApplicationTests.java`        | ✅ OK                                                                     |
+| `application.properties`                 | 🔵 sem H2/Flyway/JPA config                                               |
+| `db/migration/`                          | 🔵 vazio — sem migrations                                                 |
 
 ---
 
@@ -372,4 +372,4 @@ spring:
 
 ---
 
-*Documento gerado automaticamente após análise estática do código-fonte. Itens marcados como responsabilidade de outro colaborador (services) não foram analisados em profundidade.*
+_Documento gerado automaticamente após análise estática do código-fonte. Itens marcados como responsabilidade de outro colaborador (services) não foram analisados em profundidade._
