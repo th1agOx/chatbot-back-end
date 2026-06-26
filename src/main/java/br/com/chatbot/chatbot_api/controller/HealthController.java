@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class HealthController {
 
     @GetMapping("/health")
-    @Operation(summary = "Check API health status")
+    @Operation(summary = "Checagem dos status da saúde da API")
     public ResponseEntity<HealthResponse> health() {
         var response = new HealthResponse("UP", LocalDateTime.now());
         return ResponseEntity.ok(response);

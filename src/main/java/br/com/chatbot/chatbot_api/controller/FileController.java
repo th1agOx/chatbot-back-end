@@ -16,13 +16,13 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
-@Tag(name = "Files", description = "File upload endpoints")
+@Tag(name = "Files", description = "End-point dedicado aos arquivos de upload")
 public class FileController {
 
     private final FileService fileService;
 
     @PostMapping("/upload")
-    @Operation(summary = "Upload a TXT or PDF file to a conversation")
+    @Operation(summary = "Post de Upload para arquivos .txt e .pdf")
     public ResponseEntity<AttachmentResponse> upload(
             @RequestParam Long conversationId,
             @RequestParam MultipartFile file) {
