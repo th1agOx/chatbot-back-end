@@ -1,4 +1,11 @@
-# Chatbot API
+## Grupo 7:
+Douglas Costa,
+João Pedro Mazzotti,
+Matheus da Silveira Santos,
+Thiago Rocha.
+
+
+# 🤖 Chatbot API - Backend
 
 Backend REST de um chatbot desenvolvido com **Java 21**, **Spring Boot 3** e **Clean Architecture**.
 
