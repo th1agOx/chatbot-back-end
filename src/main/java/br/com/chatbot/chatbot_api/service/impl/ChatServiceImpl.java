@@ -7,7 +7,9 @@ import br.com.chatbot.chatbot_api.entity.Message;
 import br.com.chatbot.chatbot_api.enums.MessageRole;
 import br.com.chatbot.chatbot_api.mapper.EntityMapper;
 import br.com.chatbot.chatbot_api.repository.MessageRepository;
+import br.com.chatbot.chatbot_api.service.BotService;
 import br.com.chatbot.chatbot_api.service.ChatService;
+import br.com.chatbot.chatbot_api.service.ConversationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,20 +21,20 @@ import java.util.List;
 public class ChatServiceImpl implements ChatService {
 
     private final MessageRepository messageRepository;
-    private final ConversationServiceImpl conversationService;
+    private final ConversationService conversationService;
     private final EntityMapper entityMapper;
+    private final BotService botService;
 
     @Override
     public ChatResponse sendMessage(ChatRequest request) {
         var conversation = conversationService.findConversationOrThrow(request.conversationId());
 
         var userMessage = saveMessage(conversation, MessageRole.USER, request.message());
-        var botMessage = saveMessage(conversation, MessageRole.BOT, generateBotResponse(request.message()));
+        var botMessage = saveMessage(conversation, MessageRole.BOT, botService.responseGenerate(request.message()));
 
         return new ChatResponse(
                 entityMapper.toMessageResponse(userMessage),
-                entityMapper.toMessageResponse(botMessage)
-        );
+                entityMapper.toMessageResponse(botMessage));
     }
 
     @Override
@@ -45,7 +47,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private Message saveMessage(br.com.chatbot.chatbot_api.entity.Conversation conversation,
-                                 MessageRole role, String content) {
+            MessageRole role, String content) {
         var message = Message.builder()
                 .conversation(conversation)
                 .role(role)
@@ -55,7 +57,4 @@ public class ChatServiceImpl implements ChatService {
         return messageRepository.save(message);
     }
 
-    private String generateBotResponse(String userMessage) {
-        return "Você disse: " + userMessage;
-    }
 }

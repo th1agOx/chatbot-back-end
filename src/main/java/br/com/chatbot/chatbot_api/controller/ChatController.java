@@ -21,13 +21,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
-@Tag(name = "Chat", description = "Chat messaging endpoints")
+@Tag(name = "Chat", description = "Chat mapeia os end-points")
 public class ChatController {
 
     private final ChatService chatService;
 
     @PostMapping("/send")
-    @Operation(summary = "Send a message to the chatbot")
+    @Operation(summary = "Enviar mensagem para o chatbot")
     public ResponseEntity<ChatResponse> send(@Valid @RequestBody ChatRequest request) {
         var response = chatService.sendMessage(request);
         return ResponseEntity.ok(response);

@@ -53,6 +53,6 @@ public class ConversationServiceImpl implements ConversationService {
 
     public Conversation findConversationOrThrow(Long id) {
         return conversationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Conversation not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Historico de conversa não encontrado com id: " + id));
     }
 }

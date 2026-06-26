@@ -6,6 +6,8 @@ import br.com.chatbot.chatbot_api.entity.Message;
 import br.com.chatbot.chatbot_api.enums.MessageRole;
 import br.com.chatbot.chatbot_api.mapper.EntityMapper;
 import br.com.chatbot.chatbot_api.repository.MessageRepository;
+import br.com.chatbot.chatbot_api.service.BotService;
+import br.com.chatbot.chatbot_api.service.ConversationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,7 +28,10 @@ class ChatServiceImplTest {
     private MessageRepository messageRepository;
 
     @Mock
-    private ConversationServiceImpl conversationService;
+    private ConversationService conversationService;
+
+    @Mock
+    private BotService botService;
 
     @Mock
     private EntityMapper entityMapper;
@@ -42,6 +47,7 @@ class ChatServiceImplTest {
         var request = new ChatRequest(1L, "Olá!");
 
         when(conversationService.findConversationOrThrow(1L)).thenReturn(conversation);
+        when(botService.responseGenerate("Olá!")).thenReturn("Você disse: Olá!");
         when(messageRepository.save(any())).thenAnswer(invocation -> {
             var msg = invocation.getArgument(0, Message.class);
             msg.setId(msg.getRole() == MessageRole.USER ? 1L : 2L);

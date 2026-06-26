@@ -8,12 +8,12 @@
 
 ## Arquivos Revisados
 
-| Package | Arquivos |
-|---------|----------|
-| `repository/` | `ConversationRepository`, `MessageRepository`, `AttachmentRepository` |
-| `mapper/` | `EntityMapper` |
-| `service/` | `ConversationService`, `ChatService`, `FileService` (interfaces) |
-| `service/impl/` | `ConversationServiceImpl`, `ChatServiceImpl`, `FileServiceImpl` |
+| Package              | Arquivos                                                                    |
+| -------------------- | --------------------------------------------------------------------------- |
+| `repository/`        | `ConversationRepository`, `MessageRepository`, `AttachmentRepository`       |
+| `mapper/`            | `EntityMapper`                                                              |
+| `service/`           | `ConversationService`, `ChatService`, `FileService` (interfaces)            |
+| `service/impl/`      | `ConversationServiceImpl`, `ChatServiceImpl`, `FileServiceImpl`             |
 | `test/service/impl/` | `ConversationServiceImplTest`, `ChatServiceImplTest`, `FileServiceImplTest` |
 
 ---
@@ -28,7 +28,10 @@ Nenhum — o código compila e funciona após as correções aplicadas no CODE_R
 
 ### 2.1 ChatServiceImpl e FileServiceImpl dependem de implementação concreta
 
+//Feito por humano
+
 **Arquivos:**
+
 - `service/impl/ChatServiceImpl.java:22` — `ConversationServiceImpl conversationService`
 - `service/impl/FileServiceImpl.java:25` — `ConversationServiceImpl conversationService`
 
@@ -68,6 +71,8 @@ private final ConversationService conversationService;
 
 ### 2.2 ChatServiceImpl: Lógica de resposta do BOT inline — sem BotService
 
+//Feito por humano
+
 **Arquivo:** `service/impl/ChatServiceImpl.java:58-60`
 
 **Problema:** O método `generateBotResponse()` está embutido no `ChatServiceImpl`. A especificação exige que a geração de resposta seja feita por um `BotService` injetável, substituível futuramente por OpenAI, Gemini, etc. sem alterar `ChatServiceImpl`.
@@ -99,6 +104,8 @@ private final BotService botService;
 
 ### 2.3 FileServiceImpl: `file.getOriginalFilename()` pode retornar null
 
+// Feito por humano
+
 **Arquivo:** `service/impl/FileServiceImpl.java:36`
 
 **Problema:** `MultipartFile.getOriginalFilename()` pode retornar `null` segundo o contrato da interface. O valor é passado diretamente para `Attachment.builder().fileName(...)` sem validação.
@@ -120,6 +127,8 @@ if (fileName == null || fileName.isBlank()) {
 
 ### 3.1 `@Repository` redundante nos repositories (3 ocorrências)
 
+// Feito por humano
+
 **Arquivos:** `repository/ConversationRepository.java:7`, `MessageRepository.java:9`, `AttachmentRepository.java:7`
 
 **Problema:** `JpaRepository` já possui `@Repository` herdado via `SimpleJpaRepository`. A anotação é redundante.
@@ -129,6 +138,11 @@ if (fileName == null || fileName.isBlank()) {
 ---
 
 ### 3.2 `ConversationServiceImpl.findConversationOrThrow()` público — expõe entity
+
+/\* Não entendi, eu instancio o metodo findById no repositoy
+
+- Porque o metodo findConversationOrThrow já localiza o id
+  \*\
 
 **Arquivo:** `service/impl/ConversationServiceImpl.java:54`
 
@@ -141,6 +155,8 @@ if (fileName == null || fileName.isBlank()) {
 ---
 
 ### 3.3 `FileServiceImpl` valida content-type mas não extensão do arquivo
+
+// feito por humano
 
 **Arquivo:** `service/impl/FileServiceImpl.java:50-53`
 
@@ -167,7 +183,10 @@ private void validateFile(MultipartFile file) {
 
 ### 3.4 Testes mockam `ConversationServiceImpl` concreto
 
+// opencode Faça
+
 **Arquivos:**
+
 - `test/service/impl/ChatServiceImplTest.java:29`
 - `test/service/impl/FileServiceImplTest.java:26`
 
@@ -181,9 +200,12 @@ private void validateFile(MultipartFile file) {
 
 ### 3.5 `application.yml` e código duplicam validação de tamanho de arquivo
 
+// Feito por humano
+
 **Arquivo:** `application.yml:29` + `service/impl/FileServiceImpl.java:21`
 
 **Problema:** O limite de 10MB está configurado em dois lugares:
+
 - `spring.servlet.multipart.max-file-size: 10MB`
 - `FileServiceImpl.MAX_FILE_SIZE = 10 * 1024 * 1024L`
 
@@ -209,6 +231,7 @@ private DataSize maxFileSize;
 ### 4.2 Cobertura de testes baixa
 
 **Arquivos:**
+
 - `ConversationServiceImplTest` — apenas 2 cenários (create, findById not found). Falta: `findAll`, `deleteById`, `deleteById not found`.
 - `FileServiceImplTest` — apenas 2 cenários (txt válido, tipo inválido). Falta: `PDF válido`, `conversation not found`, `arquivo vazio`.
 
@@ -224,21 +247,21 @@ Nota: A convenção adotada (sem prefixo `I`) é boa e segue o padrão Spring. A
 
 ## 5. Resumo por Arquivo
 
-| Arquivo | Achados |
-|---------|---------|
-| `repository/ConversationRepository.java` | 🔵 @Repository redundante |
-| `repository/MessageRepository.java` | 🔵 @Repository redundante; ✅ query method |
-| `repository/AttachmentRepository.java` | 🔵 @Repository redundante |
-| `mapper/EntityMapper.java` | ⚪ God class em potencial |
-| `service/ConversationService.java` | ✅ OK |
-| `service/ChatService.java` | ✅ OK |
-| `service/FileService.java` | ✅ OK |
-| `service/impl/ConversationServiceImpl.java` | 🟡 findConversationOrThrow público (causa 2.1) |
-| `service/impl/ChatServiceImpl.java` | 🟡 DIP violation; 🟡 sem BotService |
-| `service/impl/FileServiceImpl.java` | 🟡 DIP violation; 🟡 getOriginalFilename null; 🔵 sem validação de extensão |
-| `test/.../ConversationServiceImplTest.java` | 🟡 mock concreto; ⚪ baixa cobertura |
-| `test/.../ChatServiceImplTest.java` | 🟡 mock concreto |
-| `test/.../FileServiceImplTest.java` | 🟡 mock concreto; ⚪ baixa cobertura |
+| Arquivo                                     | Achados                                                                     |
+| ------------------------------------------- | --------------------------------------------------------------------------- |
+| `repository/ConversationRepository.java`    | 🔵 @Repository redundante                                                   |
+| `repository/MessageRepository.java`         | 🔵 @Repository redundante; ✅ query method                                  |
+| `repository/AttachmentRepository.java`      | 🔵 @Repository redundante                                                   |
+| `mapper/EntityMapper.java`                  | ⚪ God class em potencial                                                   |
+| `service/ConversationService.java`          | ✅ OK                                                                       |
+| `service/ChatService.java`                  | ✅ OK                                                                       |
+| `service/FileService.java`                  | ✅ OK                                                                       |
+| `service/impl/ConversationServiceImpl.java` | 🟡 findConversationOrThrow público (causa 2.1)                              |
+| `service/impl/ChatServiceImpl.java`         | 🟡 DIP violation; 🟡 sem BotService                                         |
+| `service/impl/FileServiceImpl.java`         | 🟡 DIP violation; 🟡 getOriginalFilename null; 🔵 sem validação de extensão |
+| `test/.../ConversationServiceImplTest.java` | 🟡 mock concreto; ⚪ baixa cobertura                                        |
+| `test/.../ChatServiceImplTest.java`         | 🟡 mock concreto                                                            |
+| `test/.../FileServiceImplTest.java`         | 🟡 mock concreto; ⚪ baixa cobertura                                        |
 
 ---
 
@@ -257,4 +280,4 @@ Nota: A convenção adotada (sem prefixo `I`) é boa e segue o padrão Spring. A
 
 ---
 
-*Este review considera apenas os 4 novos packages. Issues já reportados no CODE_REVIEW.md (pom.xml, entities, exception handler, etc.) foram corrigidos separadamente.*
+_Este review considera apenas os 4 novos packages. Issues já reportados no CODE_REVIEW.md (pom.xml, entities, exception handler, etc.) foram corrigidos separadamente._
