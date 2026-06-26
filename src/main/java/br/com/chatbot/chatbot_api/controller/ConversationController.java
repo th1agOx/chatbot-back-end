@@ -22,34 +22,34 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/conversations")
 @RequiredArgsConstructor
-@Tag(name = "Conversations", description = "Conversation management endpoints")
+@Tag(name = "Conversations", description = "End-point dedicado para o gerenciamento de conversação")
 public class ConversationController {
 
     private final ConversationService conversationService;
 
     @PostMapping
-    @Operation(summary = "Create a new conversation")
+    @Operation(summary = "Post para criar um novo campo de conversação")
     public ResponseEntity<ConversationResponse> create(@Valid @RequestBody ConversationRequest request) {
         var response = conversationService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
-    @Operation(summary = "List all conversations")
+    @Operation(summary = "Get para listar todas as conversas")
     public ResponseEntity<List<ConversationResponse>> findAll() {
         var responses = conversationService.findAll();
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Find conversation by ID")
+    @Operation(summary = "Get para encontrar a conversa pelo ID")
     public ResponseEntity<ConversationResponse> findById(@PathVariable Long id) {
         var response = conversationService.findById(id);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a conversation")
+    @Operation(summary = "Delete do campo da conversar")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         conversationService.deleteById(id);
         return ResponseEntity.noContent().build();

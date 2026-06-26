@@ -27,14 +27,14 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping("/send")
-    @Operation(summary = "Enviar mensagem para o chatbot")
+    @Operation(summary = "Post para Enviar mensagem para o chatbot")
     public ResponseEntity<ChatResponse> send(@Valid @RequestBody ChatRequest request) {
         var response = chatService.sendMessage(request);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/history/{conversationId}")
-    @Operation(summary = "Get chat history for a conversation")
+    @Operation(summary = "Get no historico de conversa no chat")
     public ResponseEntity<List<MessageResponse>> history(@PathVariable Long conversationId) {
         var messages = chatService.getHistory(conversationId);
         return ResponseEntity.ok(messages);
