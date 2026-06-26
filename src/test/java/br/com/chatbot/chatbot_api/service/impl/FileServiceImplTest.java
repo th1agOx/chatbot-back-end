@@ -4,12 +4,16 @@ import br.com.chatbot.chatbot_api.entity.Conversation;
 import br.com.chatbot.chatbot_api.exception.InvalidFileTypeException;
 import br.com.chatbot.chatbot_api.mapper.EntityMapper;
 import br.com.chatbot.chatbot_api.repository.AttachmentRepository;
+import br.com.chatbot.chatbot_api.service.ConversationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.unit.DataSize;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -23,13 +27,18 @@ class FileServiceImplTest {
     private AttachmentRepository attachmentRepository;
 
     @Mock
-    private ConversationServiceImpl conversationService;
+    private ConversationService conversationService;
 
     @Mock
     private EntityMapper entityMapper;
 
     @InjectMocks
     private FileServiceImpl fileService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(fileService, "maxFileSize", DataSize.ofMegabytes(10));
+    }
 
     @Test
     void upload_WithValidTxtFile_ShouldSucceed() {
@@ -57,11 +66,6 @@ class FileServiceImplTest {
 
     @Test
     void upload_WithInvalidFileType_ShouldThrow() {
-        var conversation = new Conversation();
-        conversation.setId(1L);
-
-        when(conversationService.findConversationOrThrow(1L)).thenReturn(conversation);
-
         var file = new MockMultipartFile(
                 "file", "test.exe", "application/x-msdownload", "data".getBytes());
 
