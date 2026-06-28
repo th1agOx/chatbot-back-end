@@ -3,7 +3,7 @@ package br.com.chatbot.chatbot_api.service.impl;
 import br.com.chatbot.chatbot_api.dto.response.AttachmentResponse;
 import br.com.chatbot.chatbot_api.entity.Attachment;
 import br.com.chatbot.chatbot_api.exception.InvalidFileTypeException;
-import br.com.chatbot.chatbot_api.mapper.EntityMapper;
+import br.com.chatbot.chatbot_api.mapper.AttachmentMapper;
 import br.com.chatbot.chatbot_api.repository.AttachmentRepository;
 import br.com.chatbot.chatbot_api.service.ConversationService;
 import br.com.chatbot.chatbot_api.service.FileService;
@@ -30,7 +30,7 @@ public class FileServiceImpl implements FileService {
 
     private final AttachmentRepository attachmentRepository;
     private final ConversationService conversationService;
-    private final EntityMapper entityMapper;
+    private final AttachmentMapper attachmentMapper;
 
     @Override
     public AttachmentResponse upload(Long conversationId, MultipartFile file) {
@@ -53,7 +53,7 @@ public class FileServiceImpl implements FileService {
 
         var saved = attachmentRepository.save(attachment);
 
-        return entityMapper.toAttachmentResponse(saved);
+        return attachmentMapper.toAttachmentResponse(saved);
     }
 
     private void validateFile(MultipartFile file) {
