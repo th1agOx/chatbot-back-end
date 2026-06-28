@@ -4,7 +4,7 @@ import br.com.chatbot.chatbot_api.dto.request.ConversationRequest;
 import br.com.chatbot.chatbot_api.dto.response.ConversationResponse;
 import br.com.chatbot.chatbot_api.entity.Conversation;
 import br.com.chatbot.chatbot_api.exception.ResourceNotFoundException;
-import br.com.chatbot.chatbot_api.mapper.EntityMapper;
+import br.com.chatbot.chatbot_api.mapper.ConversationMapper;
 import br.com.chatbot.chatbot_api.repository.ConversationRepository;
 import br.com.chatbot.chatbot_api.service.ConversationService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.List;
 public class ConversationServiceImpl implements ConversationService {
 
     private final ConversationRepository conversationRepository;
-    private final EntityMapper entityMapper;
+    private final ConversationMapper conversationMapper;
 
     @Override
     public ConversationResponse create(ConversationRequest request) {
@@ -28,21 +28,21 @@ public class ConversationServiceImpl implements ConversationService {
                 .updatedAt(LocalDateTime.now())
                 .build();
         var saved = conversationRepository.save(conversation);
-        return entityMapper.toConversationResponse(saved);
+        return conversationMapper.toConversationResponse(saved);
     }
 
     @Override
     public List<ConversationResponse> findAll() {
         return conversationRepository.findAll()
                 .stream()
-                .map(entityMapper::toConversationResponse)
+                .map(conversationMapper::toConversationResponse)
                 .toList();
     }
 
     @Override
     public ConversationResponse findById(Long id) {
         var conversation = findConversationOrThrow(id);
-        return entityMapper.toConversationResponse(conversation);
+        return conversationMapper.toConversationResponse(conversation);
     }
 
     @Override

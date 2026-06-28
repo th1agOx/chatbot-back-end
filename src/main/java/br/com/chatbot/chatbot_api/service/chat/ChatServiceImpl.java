@@ -1,11 +1,12 @@
-package br.com.chatbot.chatbot_api.service.impl;
+package br.com.chatbot.chatbot_api.service.chat;
 
 import br.com.chatbot.chatbot_api.dto.request.ChatRequest;
 import br.com.chatbot.chatbot_api.dto.response.ChatResponse;
+import br.com.chatbot.chatbot_api.dto.response.ChatResponseV2;
 import br.com.chatbot.chatbot_api.dto.response.MessageResponse;
 import br.com.chatbot.chatbot_api.entity.Message;
 import br.com.chatbot.chatbot_api.enums.MessageRole;
-import br.com.chatbot.chatbot_api.mapper.EntityMapper;
+import br.com.chatbot.chatbot_api.mapper.MessageMapper;
 import br.com.chatbot.chatbot_api.repository.MessageRepository;
 import br.com.chatbot.chatbot_api.service.BotService;
 import br.com.chatbot.chatbot_api.service.ChatService;
@@ -22,7 +23,7 @@ public class ChatServiceImpl implements ChatService {
 
     private final MessageRepository messageRepository;
     private final ConversationService conversationService;
-    private final EntityMapper entityMapper;
+    private final MessageMapper messageMapper;
     private final BotService botService;
 
     @Override
@@ -30,11 +31,29 @@ public class ChatServiceImpl implements ChatService {
         var conversation = conversationService.findConversationOrThrow(request.conversationId());
 
         var userMessage = saveMessage(conversation, MessageRole.USER, request.message());
-        var botMessage = saveMessage(conversation, MessageRole.BOT, botService.responseGenerate(request.message()));
+        var botAnswer = botService.responseGenerate(request.message());
+        var botMessage = saveMessage(conversation, MessageRole.BOT, botAnswer);
 
         return new ChatResponse(
-                entityMapper.toMessageResponse(userMessage),
-                entityMapper.toMessageResponse(botMessage));
+                messageMapper.toMessageResponse(userMessage),
+                messageMapper.toMessageResponse(botMessage));
+    }
+
+    public ChatResponseV2 sendMessageV2(ChatRequest request) {
+        var conversation = conversationService.findConversationOrThrow(request.conversationId());
+
+        var userMessage = saveMessage(conversation, MessageRole.USER, request.message());
+        var ragResult = botService.responseGenerateWithMetadata(request.message());
+        var botMessage = saveMessage(conversation, MessageRole.BOT, ragResult.context());
+
+        return new ChatResponseV2(
+                messageMapper.toMessageResponse(userMessage),
+                messageMapper.toMessageResponse(botMessage),
+                ragResult.context(),
+                ragResult.sources(),
+                ragResult.executionTimeMs(),
+                ragResult.chunksConsumed()
+        );
     }
 
     @Override
@@ -42,12 +61,12 @@ public class ChatServiceImpl implements ChatService {
         conversationService.findConversationOrThrow(conversationId);
         return messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId)
                 .stream()
-                .map(entityMapper::toMessageResponse)
+                .map(messageMapper::toMessageResponse)
                 .toList();
     }
 
     private Message saveMessage(br.com.chatbot.chatbot_api.entity.Conversation conversation,
-            MessageRole role, String content) {
+                                MessageRole role, String content) {
         var message = Message.builder()
                 .conversation(conversation)
                 .role(role)
@@ -56,5 +75,4 @@ public class ChatServiceImpl implements ChatService {
                 .build();
         return messageRepository.save(message);
     }
-
 }
