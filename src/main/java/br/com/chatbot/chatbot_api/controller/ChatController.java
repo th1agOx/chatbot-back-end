@@ -1,7 +1,7 @@
 package br.com.chatbot.chatbot_api.controller;
 
 import br.com.chatbot.chatbot_api.dto.request.ChatRequest;
-import br.com.chatbot.chatbot_api.dto.response.ChatResponse;
+import br.com.chatbot.chatbot_api.dto.response.ChatResponseV2;
 import br.com.chatbot.chatbot_api.dto.response.MessageResponse;
 import br.com.chatbot.chatbot_api.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,20 +21,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
-@Tag(name = "Chat", description = "Chat mapeia os end-points")
+@Tag(name = "Chat", description = "Chat com suporte a RAG e respostas inteligentes")
 public class ChatController {
 
     private final ChatService chatService;
 
     @PostMapping("/send")
-    @Operation(summary = "Post para Enviar mensagem para o chatbot")
-    public ResponseEntity<ChatResponse> send(@Valid @RequestBody ChatRequest request) {
-        var response = chatService.sendMessage(request);
+    @Operation(summary = "Enviar mensagem para o chatbot com resposta RAG")
+    public ResponseEntity<ChatResponseV2> send(@Valid @RequestBody ChatRequest request) {
+        var response = chatService.sendMessageV2(request);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/history/{conversationId}")
-    @Operation(summary = "Get no historico de conversa no chat")
+    @Operation(summary = "Histórico de mensagens da conversa")
     public ResponseEntity<List<MessageResponse>> history(@PathVariable Long conversationId) {
         var messages = chatService.getHistory(conversationId);
         return ResponseEntity.ok(messages);
