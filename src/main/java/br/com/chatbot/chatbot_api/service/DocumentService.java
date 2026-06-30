@@ -3,9 +3,11 @@ package br.com.chatbot.chatbot_api.service;
 import br.com.chatbot.chatbot_api.dto.response.DocumentResponse;
 import br.com.chatbot.chatbot_api.entity.Document;
 import br.com.chatbot.chatbot_api.entity.DocumentChunk;
+import br.com.chatbot.chatbot_api.entity.DocumentStatus;
 import br.com.chatbot.chatbot_api.entity.PGvector;
 import br.com.chatbot.chatbot_api.exception.DocumentProcessingException;
 import br.com.chatbot.chatbot_api.exception.InvalidFileTypeException;
+import br.com.chatbot.chatbot_api.exception.ResourceNotFoundException;
 import br.com.chatbot.chatbot_api.mapper.DocumentMapper;
 import br.com.chatbot.chatbot_api.repository.DocumentRepository;
 import br.com.chatbot.chatbot_api.service.chunking.TextChunker;
@@ -73,6 +75,7 @@ public class DocumentService {
                 .fileName(file.getOriginalFilename())
                 .contentType(file.getContentType())
                 .fileSize(file.getSize())
+                .status(DocumentStatus.PROCESSING)
                 // .originalText(text) // COMENTADO: evita OOM — revisar com front se precisam do texto original
                 .build();
 
@@ -115,6 +118,12 @@ public class DocumentService {
         }
 
         return extension;
+    }
+
+    public DocumentStatus getStatus(Long id) {
+        var document = documentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Documento não encontrado: " + id));
+        return document.getStatus();
     }
 
     private DocumentParser selectParser(String extension) {
