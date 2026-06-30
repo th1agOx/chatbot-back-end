@@ -1,12 +1,15 @@
 package br.com.chatbot.chatbot_api.controller;
 
 import br.com.chatbot.chatbot_api.dto.response.DocumentResponse;
+import br.com.chatbot.chatbot_api.entity.DocumentStatus;
 import br.com.chatbot.chatbot_api.service.DocumentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,11 +23,19 @@ import org.springframework.web.multipart.MultipartFile;
 public class DocumentController {
 
     private final DocumentService documentService;
+    
 
     @PostMapping("/upload")
     @Operation(summary = "Upload de documento com pipeline completo (parse + chunk + embed + persist)")
     public ResponseEntity<DocumentResponse> upload(@RequestParam MultipartFile file) {
         var response = documentService.upload(file);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{id}/status")
+    @Operation(summary = "Obter status de processamento de um documento")
+    public ResponseEntity<DocumentStatus> getStatus(@PathVariable Long id) {
+        var status = documentService.getStatus(id);
+        return ResponseEntity.ok(status);
     }
 }
