@@ -4,7 +4,7 @@ CREATE TABLE document_chunks (
     id UUID PRIMARY KEY,
     document_id BIGINT NOT NULL,
     content TEXT NOT NULL,
-    embedding vector(1536) NOT NULL,
+    embedding vector(768) NOT NULL,
     chunk_index INTEGER NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_chunks_document FOREIGN KEY (document_id)
@@ -13,7 +13,6 @@ CREATE TABLE document_chunks (
 
 CREATE INDEX idx_chunks_document_id ON document_chunks(document_id);
 
-CREATE INDEX idx_chunks_embedding_ivf
+CREATE INDEX idx_chunks_embedding_hnsw
     ON document_chunks
-    USING ivf (embedding vector_cosine_ops)
-    WITH (lists = 100);
+    USING hnsw (embedding vector_cosine_ops);

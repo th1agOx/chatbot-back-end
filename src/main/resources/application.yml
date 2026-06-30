@@ -3,29 +3,52 @@ spring:
     name: chatbot-api
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/chatbotdb
+    url: jdbc:postgresql://localhost:${DB_PORT:5433}/${DB_NAME:postgres}
     driver-class-name: org.postgresql.Driver
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD:Th1234}
 
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: false
     open-in-view: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+    properties: {}
 
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  ai:
+    openai:
+      api-key: ${OPEN_ROUTER_API_KEY}
+      base-url: https://openrouter.ai
+      chat:
+        options:
+          model: google/gemma-2-9b-it:free
+      embedding:
+        options:
+          model: jinaai/jina-embeddings-v2-base-en
+
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+
+app:
+  n8n:
+    webhook-url: ${N8N_WEBHOOK_URL}
+  rag:
+    top-k: 5
+    min-similarity: 0.75
+    max-context-size: 2000
+
+api:
+  security:
+    token:
+      secret: ${JWT_SECRET}
+      expiration: ${JWT_TIMEOUT:86400000}
 
 springdoc:
   api-docs:

@@ -16,27 +16,37 @@ public class OpenAiConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public OpenAiChatModel openAiChatModel(
+    public OpenAiApi openAiApi(
             @Value("${spring.ai.openai.base-url}") String baseUrl,
-            @Value("${spring.ai.openai.api-key}") String apiKey,
+            @Value("${spring.ai.openai.api-key}") String apiKey) {
+        return OpenAiApi.builder()
+                .baseUrl(baseUrl)
+                .apiKey(apiKey)
+                .build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public OpenAiChatModel openAiChatModel(
+            OpenAiApi openAiApi,
             @Value("${spring.ai.openai.chat.options.model}") String model) {
-        var api = new OpenAiApi(baseUrl, apiKey);
         var options = OpenAiChatOptions.builder()
                 .model(model)
                 .build();
-        return new OpenAiChatModel(api, options);
+        return OpenAiChatModel.builder()
+                .openAiApi(openAiApi)
+                .defaultOptions(options)
+                .build();
     }
 
     @Bean
     @ConditionalOnMissingBean
     public OpenAiEmbeddingModel openAiEmbeddingModel(
-            @Value("${spring.ai.openai.base-url}") String baseUrl,
-            @Value("${spring.ai.openai.api-key}") String apiKey,
+            OpenAiApi openAiApi,
             @Value("${spring.ai.openai.embedding.options.model}") String model) {
-        var api = new OpenAiApi(baseUrl, apiKey);
         var options = OpenAiEmbeddingOptions.builder()
                 .model(model)
                 .build();
-        return new OpenAiEmbeddingModel(api, MetadataMode.ALL, options);
+        return new OpenAiEmbeddingModel(openAiApi, MetadataMode.ALL, options);
     }
 }
