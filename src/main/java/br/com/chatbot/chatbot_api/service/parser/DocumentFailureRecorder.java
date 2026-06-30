@@ -1,4 +1,4 @@
-package br.com.chatbot.chatbot_api.service;
+package br.com.chatbot.chatbot_api.service.parser;
 
 import br.com.chatbot.chatbot_api.entity.Document;
 import br.com.chatbot.chatbot_api.entity.DocumentStatus;
