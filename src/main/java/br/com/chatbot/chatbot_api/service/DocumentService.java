@@ -13,6 +13,7 @@ import br.com.chatbot.chatbot_api.repository.DocumentRepository;
 import br.com.chatbot.chatbot_api.service.chunking.TextChunker;
 import br.com.chatbot.chatbot_api.service.embedding.EmbeddingService;
 import br.com.chatbot.chatbot_api.service.integration.N8nWebhookNotifier;
+import br.com.chatbot.chatbot_api.service.parser.DocumentFailureRecorder;
 import br.com.chatbot.chatbot_api.service.parser.DocumentParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,14 +36,14 @@ public class DocumentService {
     private static final Map<String, String> CONTENT_TYPE_MAP = Map.of(
             "txt", "text/plain",
             "pdf", "application/pdf",
-            "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    );
+            "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
     private final TextChunker textChunker;
     private final EmbeddingService embeddingService;
     private final N8nWebhookNotifier n8nNotifier;
+    private final DocumentFailureRecorder failureRecorder;
     private final Map<String, DocumentParser> parserMap = new HashMap<>();
 
     private final List<DocumentParser> parsers;
@@ -76,9 +77,32 @@ public class DocumentService {
                 .contentType(file.getContentType())
                 .fileSize(file.getSize())
                 .status(DocumentStatus.PROCESSING)
-                // .originalText(text) // COMENTADO: evita OOM — revisar com front se precisam do texto original
+                // .originalText(text) // COMENTADO: evita OOM — revisar com front se precisam
+                // do texto original
                 .build();
 
+        List<DocumentChunk> documentChunks;
+        try {
+            documentChunks = buildChunks(document, chunks);
+        } catch (RuntimeException e) {
+            // Persiste o status FAILED em transação própria, já que esta transação
+            // será revertida pela exceção lançada logo abaixo.
+            failureRecorder.recordFailure(file.getOriginalFilename(), file.getContentType(), file.getSize());
+            throw new DocumentProcessingException(
+                    "Falha ao gerar embeddings para o documento: " + e.getMessage(), e);
+        }
+
+        document.setChunks(documentChunks);
+        document.setStatus(DocumentStatus.COMPLETED);
+
+        var saved = documentRepository.save(document);
+
+        n8nNotifier.notify(saved.getId());
+
+        return documentMapper.toDocumentResponse(saved);
+    }
+
+    private List<DocumentChunk> buildChunks(Document document, List<String> chunks) {
         var documentChunks = new ArrayList<DocumentChunk>();
         for (int i = 0; i < chunks.size(); i++) {
             var vector = embeddingService.generateEmbedding(chunks.get(i));
@@ -91,13 +115,7 @@ public class DocumentService {
                     .build();
             documentChunks.add(chunk);
         }
-        document.setChunks(documentChunks);
-
-        var saved = documentRepository.save(document);
-
-        n8nNotifier.notify(saved.getId());
-
-        return documentMapper.toDocumentResponse(saved);
+        return documentChunks;
     }
 
     private String validateFile(MultipartFile file) {
