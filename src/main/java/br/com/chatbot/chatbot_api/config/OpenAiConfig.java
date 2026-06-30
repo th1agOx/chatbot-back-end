@@ -1,42 +1,42 @@
-package br.com.chatbot.chatbot_api.controller;
+package br.com.chatbot.chatbot_api.config;
 
-import br.com.chatbot.chatbot_api.dto.request.ChatRequest;
-import br.com.chatbot.chatbot_api.dto.response.ChatResponseV2;
-import br.com.chatbot.chatbot_api.dto.response.MessageResponse;
-import br.com.chatbot.chatbot_api.service.ChatService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.ai.document.MetadataMode;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.openai.OpenAiEmbeddingOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
+@Configuration
+public class OpenAiConfig {
 
-@RestController
-@RequestMapping("/api/chat")
-@RequiredArgsConstructor
-@Tag(name = "Chat", description = "Chat com suporte a RAG e respostas inteligentes")
-public class ChatController {
-
-    private final ChatService chatService;
-
-    @PostMapping("/send")
-    @Operation(summary = "Enviar mensagem para o chatbot com resposta RAG")
-    public ResponseEntity<ChatResponseV2> send(@Valid @RequestBody ChatRequest request) {
-        var response = chatService.sendMessageV2(request);
-        return ResponseEntity.ok(response);
+    @Bean
+    @ConditionalOnMissingBean
+    public OpenAiChatModel openAiChatModel(
+            @Value("${spring.ai.openai.base-url}") String baseUrl,
+            @Value("${spring.ai.openai.api-key}") String apiKey,
+            @Value("${spring.ai.openai.chat.options.model}") String model) {
+        var api = new OpenAiApi(baseUrl, apiKey);
+        var options = OpenAiChatOptions.builder()
+                .model(model)
+                .build();
+        return new OpenAiChatModel(api, options);
     }
 
-    @GetMapping("/history/{conversationId}")
-    @Operation(summary = "Histórico de mensagens da conversa")
-    public ResponseEntity<List<MessageResponse>> history(@PathVariable Long conversationId) {
-        var messages = chatService.getHistory(conversationId);
-        return ResponseEntity.ok(messages);
+    @Bean
+    @ConditionalOnMissingBean
+    public OpenAiEmbeddingModel openAiEmbeddingModel(
+            @Value("${spring.ai.openai.base-url}") String baseUrl,
+            @Value("${spring.ai.openai.api-key}") String apiKey,
+            @Value("${spring.ai.openai.embedding.options.model}") String model) {
+        var api = new OpenAiApi(baseUrl, apiKey);
+        var options = OpenAiEmbeddingOptions.builder()
+                .model(model)
+                .build();
+        return new OpenAiEmbeddingModel(api, MetadataMode.ALL, options);
     }
 }

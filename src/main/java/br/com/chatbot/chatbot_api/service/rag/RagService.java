@@ -17,6 +17,19 @@ public class RagService {
     private final DocumentChunkRepository chunkRepository;
 
     public RagResult retrieveContext(String question, int topK, double minSimilarity, int maxContextSize) {
+        if (question == null || question.isBlank()) {
+            throw new IllegalArgumentException("Pergunta não pode ser vazia");
+        }
+        if (topK <= 0) {
+            throw new IllegalArgumentException("topK deve ser positivo");
+        }
+        if (minSimilarity < 0 || minSimilarity > 1) {
+            throw new IllegalArgumentException("minSimilarity deve estar entre 0 e 1");
+        }
+        if (maxContextSize <= 0) {
+            throw new IllegalArgumentException("maxContextSize deve ser positivo");
+        }
+
         var startTime = System.currentTimeMillis();
 
         var queryVector = embeddingService.generateEmbedding(question);
@@ -31,7 +44,7 @@ public class RagService {
             contextBuilder.append(chunk.getContent()).append("\n\n");
             sources.add(new SourceReference(
                     chunk.getDocumentId(),
-                    null,
+                    chunk.getDocumentName(),
                     chunk.getContent().substring(0, Math.min(200, chunk.getContent().length()))
             ));
         }

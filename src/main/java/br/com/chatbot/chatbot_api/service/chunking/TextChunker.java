@@ -1,10 +1,13 @@
 package br.com.chatbot.chatbot_api.service.chunking;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 @Component
 public class TextChunker {
@@ -17,6 +20,15 @@ public class TextChunker {
 
     @Value("${app.chunking.delimiters:\n\n|\n|\\.|\\?}")
     private String delimiters;
+
+    @PostConstruct
+    public void init() {
+        try {
+            Pattern.compile("(?<=" + delimiters + ")");
+        } catch (PatternSyntaxException e) {
+            throw new IllegalArgumentException("Delimitador inválido configurado em app.chunking.delimiters: " + delimiters, e);
+        }
+    }
 
     public List<String> chunk(String text) {
         if (text == null || text.isBlank()) {
@@ -62,6 +74,11 @@ public class TextChunker {
         if (text.length() <= overlap) {
             return "";
         }
-        return text.substring(text.length() - overlap);
+        var candidate = text.substring(text.length() - overlap);
+        var firstSpace = candidate.indexOf(' ');
+        if (firstSpace > 0 && firstSpace < candidate.length() - 1) {
+            return candidate.substring(firstSpace + 1);
+        }
+        return candidate;
     }
 }

@@ -9,6 +9,8 @@ public interface ChunkSimilarityProjection {
 
     Long getDocumentId();
 
+    String getDocumentName();
+
     String getContent();
 
     Integer getChunkIndex();

@@ -17,8 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +41,19 @@ public class DocumentService {
     private final TextChunker textChunker;
     private final EmbeddingService embeddingService;
     private final N8nWebhookNotifier n8nNotifier;
+    private final Map<String, DocumentParser> parserMap = new HashMap<>();
+
     private final List<DocumentParser> parsers;
+
+    @PostConstruct
+    public void initParserMap() {
+        for (var parser : parsers) {
+            var key = parser.getClass().getSimpleName()
+                    .replace("Parser", "")
+                    .toLowerCase();
+            parserMap.put(key, parser);
+        }
+    }
 
     @Transactional
     public DocumentResponse upload(MultipartFile file) {
@@ -59,7 +73,7 @@ public class DocumentService {
                 .fileName(file.getOriginalFilename())
                 .contentType(file.getContentType())
                 .fileSize(file.getSize())
-                .originalText(text)
+                // .originalText(text) // COMENTADO: evita OOM — revisar com front se precisam do texto original
                 .build();
 
         var documentChunks = new ArrayList<DocumentChunk>();
@@ -104,12 +118,10 @@ public class DocumentService {
     }
 
     private DocumentParser selectParser(String extension) {
-        for (var parser : parsers) {
-            var className = parser.getClass().getSimpleName().toLowerCase();
-            if (className.contains(extension)) {
-                return parser;
-            }
+        var parser = parserMap.get(extension);
+        if (parser == null) {
+            throw new DocumentProcessingException("Parser não encontrado para extensão: " + extension);
         }
-        throw new DocumentProcessingException("Parser não encontrado para extensão: " + extension);
+        return parser;
     }
 }

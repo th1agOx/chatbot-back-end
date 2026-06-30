@@ -31,15 +31,7 @@ public class BotServiceImpl implements BotService {
 
     @Override
     public String responseGenerate(String userMessage) {
-        var ragResult = ragService.retrieveContext(userMessage, topK, minSimilarity, maxContextSize);
-        var prompt = buildPrompt(ragResult.context(), userMessage);
-        var response = chatModel.call(
-                new Prompt(prompt,
-                        OpenAiChatOptions.builder()
-                                .withModel(chatModelId)
-                                .build())
-        );
-        return response.getResult().getOutput().getContent();
+        return responseGenerateWithMetadata(userMessage).context();
     }
 
     public RagResult responseGenerateWithMetadata(String userMessage) {
@@ -48,11 +40,11 @@ public class BotServiceImpl implements BotService {
         var response = chatModel.call(
                 new Prompt(prompt,
                         OpenAiChatOptions.builder()
-                                .withModel(chatModelId)
+                                .model(chatModelId)
                                 .build())
         );
         return new RagResult(
-                response.getResult().getOutput().getContent(),
+                response.getResult().getOutput().getText(),
                 ragResult.sources(),
                 ragResult.executionTimeMs(),
                 ragResult.chunksConsumed()

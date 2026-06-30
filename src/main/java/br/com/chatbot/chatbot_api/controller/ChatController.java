@@ -1,6 +1,7 @@
 package br.com.chatbot.chatbot_api.controller;
 
 import br.com.chatbot.chatbot_api.dto.request.ChatRequest;
+import br.com.chatbot.chatbot_api.dto.response.ChatResponse;
 import br.com.chatbot.chatbot_api.dto.response.ChatResponseV2;
 import br.com.chatbot.chatbot_api.dto.response.MessageResponse;
 import br.com.chatbot.chatbot_api.service.ChatService;
@@ -27,8 +28,15 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping("/send")
-    @Operation(summary = "Enviar mensagem para o chatbot com resposta RAG")
-    public ResponseEntity<ChatResponseV2> send(@Valid @RequestBody ChatRequest request) {
+    @Operation(summary = "Enviar mensagem para o chatbot (legado, sem metadados)")
+    public ResponseEntity<ChatResponse> send(@Valid @RequestBody ChatRequest request) {
+        var response = chatService.sendMessage(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/send-v2")
+    @Operation(summary = "Enviar mensagem com resposta RAG e metadados (fontes, tempo, chunks)")
+    public ResponseEntity<ChatResponseV2> sendV2(@Valid @RequestBody ChatRequest request) {
         var response = chatService.sendMessageV2(request);
         return ResponseEntity.ok(response);
     }

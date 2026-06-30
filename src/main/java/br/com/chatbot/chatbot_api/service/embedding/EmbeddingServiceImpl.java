@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -20,10 +21,13 @@ public class EmbeddingServiceImpl implements EmbeddingService {
 
     @Override
     public List<Float> generateEmbedding(String text) {
-        var request = EmbeddingRequest.builder()
-                .withModel(embeddingModelId)
-                .withInstructions(List.of(text))
+        var options = OpenAiEmbeddingOptions.builder()
+                .model(embeddingModelId)
                 .build();
-        return embeddingModel.embed(request).getResult().getOutput();
+        var request = new EmbeddingRequest(List.of(text), options);
+        var raw = embeddingModel.call(request).getResult().getOutput();
+        return IntStream.range(0, raw.length)
+                .mapToObj(i -> raw[i])
+                .toList();
     }
 }
