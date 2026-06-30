@@ -2,7 +2,7 @@ package br.com.chatbot.chatbot_api.service.impl;
 
 import br.com.chatbot.chatbot_api.entity.Conversation;
 import br.com.chatbot.chatbot_api.exception.InvalidFileTypeException;
-import br.com.chatbot.chatbot_api.mapper.EntityMapper;
+import br.com.chatbot.chatbot_api.mapper.AttachmentMapper;
 import br.com.chatbot.chatbot_api.repository.AttachmentRepository;
 import br.com.chatbot.chatbot_api.service.ConversationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +30,7 @@ class FileServiceImplTest {
     private ConversationService conversationService;
 
     @Mock
-    private EntityMapper entityMapper;
+    private AttachmentMapper attachmentMapper;
 
     @InjectMocks
     private FileServiceImpl fileService;
@@ -51,7 +51,7 @@ class FileServiceImplTest {
             att.setId(1L);
             return att;
         });
-        when(entityMapper.toAttachmentResponse(any())).thenAnswer(invocation -> {
+        when(attachmentMapper.toAttachmentResponse(any())).thenAnswer(invocation -> {
             var att = invocation.getArgument(0, br.com.chatbot.chatbot_api.entity.Attachment.class);
             return new br.com.chatbot.chatbot_api.dto.response.AttachmentResponse(
                     att.getId(), att.getFileName(), att.getContentType(), att.getSize(), att.getUploadDate());

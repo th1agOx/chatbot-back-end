@@ -3,7 +3,7 @@ package br.com.chatbot.chatbot_api.service.impl;
 import br.com.chatbot.chatbot_api.dto.request.ConversationRequest;
 import br.com.chatbot.chatbot_api.entity.Conversation;
 import br.com.chatbot.chatbot_api.exception.ResourceNotFoundException;
-import br.com.chatbot.chatbot_api.mapper.EntityMapper;
+import br.com.chatbot.chatbot_api.mapper.ConversationMapper;
 import br.com.chatbot.chatbot_api.repository.ConversationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +25,7 @@ class ConversationServiceImplTest {
     private ConversationRepository conversationRepository;
 
     @Mock
-    private EntityMapper entityMapper;
+    private ConversationMapper conversationMapper;
 
     @InjectMocks
     private ConversationServiceImpl conversationService;
@@ -38,7 +38,7 @@ class ConversationServiceImplTest {
         conversation.setTitle("Chat 1");
 
         when(conversationRepository.save(any())).thenReturn(conversation);
-        when(entityMapper.toConversationResponse(any())).then(invocation -> {
+        when(conversationMapper.toConversationResponse(any())).then(invocation -> {
             var c = invocation.getArgument(0, Conversation.class);
             return new br.com.chatbot.chatbot_api.dto.response.ConversationResponse(
                     c.getId(), c.getTitle(), c.getCreatedAt(), c.getUpdatedAt());

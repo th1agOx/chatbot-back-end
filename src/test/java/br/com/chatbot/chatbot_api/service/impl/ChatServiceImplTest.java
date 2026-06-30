@@ -4,10 +4,12 @@ import br.com.chatbot.chatbot_api.dto.request.ChatRequest;
 import br.com.chatbot.chatbot_api.entity.Conversation;
 import br.com.chatbot.chatbot_api.entity.Message;
 import br.com.chatbot.chatbot_api.enums.MessageRole;
-import br.com.chatbot.chatbot_api.mapper.EntityMapper;
+import br.com.chatbot.chatbot_api.mapper.MessageMapper;
 import br.com.chatbot.chatbot_api.repository.MessageRepository;
 import br.com.chatbot.chatbot_api.service.BotService;
+import br.com.chatbot.chatbot_api.service.ChatService;
 import br.com.chatbot.chatbot_api.service.ConversationService;
+import br.com.chatbot.chatbot_api.service.chat.ChatServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,7 +36,7 @@ class ChatServiceImplTest {
     private BotService botService;
 
     @Mock
-    private EntityMapper entityMapper;
+    private MessageMapper messageMapper;
 
     @InjectMocks
     private ChatServiceImpl chatService;
@@ -53,7 +55,7 @@ class ChatServiceImplTest {
             msg.setId(msg.getRole() == MessageRole.USER ? 1L : 2L);
             return msg;
         });
-        when(entityMapper.toMessageResponse(any())).thenAnswer(invocation -> {
+        when(messageMapper.toMessageResponse(any())).thenAnswer(invocation -> {
             var msg = invocation.getArgument(0, Message.class);
             return new br.com.chatbot.chatbot_api.dto.response.MessageResponse(
                     msg.getId(), msg.getRole(), msg.getContent(), msg.getCreatedAt());
@@ -78,7 +80,7 @@ class ChatServiceImplTest {
 
         when(conversationService.findConversationOrThrow(1L)).thenReturn(conversation);
         when(messageRepository.findByConversationIdOrderByCreatedAtAsc(1L)).thenReturn(List.of(msg));
-        when(entityMapper.toMessageResponse(any())).thenAnswer(invocation -> {
+        when(messageMapper.toMessageResponse(any())).thenAnswer(invocation -> {
             var m = invocation.getArgument(0, Message.class);
             return new br.com.chatbot.chatbot_api.dto.response.MessageResponse(
                     m.getId(), m.getRole(), m.getContent(), m.getCreatedAt());
