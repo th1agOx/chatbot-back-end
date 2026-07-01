@@ -9,8 +9,9 @@ import java.util.Optional;
 
 public interface ConversationRepository extends JpaRepository<Conversation, Long> {
 
+    @Override
     @EntityGraph(attributePaths = "messages")
-    List<Conversation> findAllWithMessages();
+    List<Conversation> findAll();
 
     @EntityGraph(attributePaths = "messages")
     Optional<Conversation> findWithMessagesById(Long id);

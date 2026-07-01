@@ -32,7 +32,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     public List<ConversationResponse> findAll() {
-        return conversationRepository.findAllWithMessages()
+        return conversationRepository.findAll()
                 .stream()
                 .map(conversationMapper::toConversationResponse)
                 .toList();
