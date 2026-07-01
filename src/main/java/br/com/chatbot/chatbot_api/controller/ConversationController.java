@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,6 +46,15 @@ public class ConversationController {
     @Operation(summary = "Get para encontrar a conversa pelo ID")
     public ResponseEntity<ConversationResponse> findById(@PathVariable Long id) {
         var response = conversationService.findById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar título da conversa")
+    public ResponseEntity<ConversationResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody ConversationRequest request) {
+        var response = conversationService.update(id, request);
         return ResponseEntity.ok(response);
     }
 

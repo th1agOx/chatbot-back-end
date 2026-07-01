@@ -11,6 +11,12 @@ spring:
 
 
 
+  jackson:
+    date-format: yyyy-MM-dd'T'HH:mm:ss'Z'
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -43,6 +49,7 @@ spring:
 
 app:
   n8n:
+    enabled: true
     webhook-url: ${N8N_WEBHOOK_URL}
   rag:
     top-k: 5

@@ -24,7 +24,6 @@ public class ConversationServiceImpl implements ConversationService {
     public ConversationResponse create(ConversationRequest request) {
         var conversation = Conversation.builder()
                 .title(request.title())
-                .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
         var saved = conversationRepository.save(conversation);
@@ -49,6 +48,14 @@ public class ConversationServiceImpl implements ConversationService {
     public void deleteById(Long id) {
         var conversation = findConversationOrThrow(id);
         conversationRepository.delete(conversation);
+    }
+
+    @Override
+    public ConversationResponse update(Long id, ConversationRequest request) {
+        var conversation = findConversationOrThrow(id);
+        conversation.setTitle(request.title());
+        var saved = conversationRepository.save(conversation);
+        return conversationMapper.toConversationResponse(saved);
     }
 
     public Conversation findConversationOrThrow(Long id) {

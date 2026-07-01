@@ -81,7 +81,6 @@ public class ChatServiceImpl implements ChatService {
                 .conversation(conversation)
                 .role(role)
                 .content(content)
-                .createdAt(LocalDateTime.now())
                 .build();
         return messageRepository.save(message);
     }

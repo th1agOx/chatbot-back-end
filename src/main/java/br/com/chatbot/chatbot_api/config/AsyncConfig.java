@@ -3,6 +3,7 @@ package br.com.chatbot.chatbot_api.config;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.client.RestTemplate;
 
@@ -14,9 +15,10 @@ public class AsyncConfig {
 
     @Bean
     public RestTemplate restTemplate() {
-        return new RestTemplateBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .readTimeout(Duration.ofSeconds(5))
-                .build();
+        var factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout((int) Duration.ofSeconds(10).toMillis());
+        factory.setReadTimeout((int) Duration.ofSeconds(10).toMillis());
+        factory.setBufferRequestBody(false);
+        return new RestTemplate(factory);
     }
 }

@@ -24,6 +24,19 @@ services:
     volumes:
       - ollama_data:/root/.ollama
 
+  n8n:
+    image: n8nio/n8n
+    container_name: chatbot-n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_HOST=localhost
+    volumes:
+      - n8n_data:/home/node/.n8n
+
 volumes:
   pgvector_data:
   ollama_data:
+  n8n_data:
