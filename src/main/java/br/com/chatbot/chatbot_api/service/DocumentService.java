@@ -33,7 +33,7 @@ import java.util.Set;
 public class DocumentService {
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("txt", "pdf", "docx");
-    private static final int EXPECTED_EMBEDDING_DIMENSION = 1536;
+    private static final int EXPECTED_EMBEDDING_DIMENSION = 768;
     private static final Map<String, String> CONTENT_TYPE_MAP = Map.of(
             "txt", "text/plain",
             "pdf", "application/pdf",
