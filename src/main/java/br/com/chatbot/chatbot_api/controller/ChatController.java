@@ -9,13 +9,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -38,6 +41,16 @@ public class ChatController {
     @Operation(summary = "Enviar mensagem com resposta RAG e metadados (fontes, tempo, chunks)")
     public ResponseEntity<ChatResponseV2> sendV2(@Valid @RequestBody ChatRequest request) {
         var response = chatService.sendMessageV2(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping(value = "/send-with-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Enviar mensagem com arquivo opcional em pipeline único (upload → RAG → resposta)")
+    public ResponseEntity<ChatResponseV2> sendWithFile(
+            @RequestParam("message") String message,
+            @RequestParam(value = "conversationId", required = false) Long conversationId,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+        var response = chatService.sendMessageWithFile(conversationId, message, file);
         return ResponseEntity.ok(response);
     }
 

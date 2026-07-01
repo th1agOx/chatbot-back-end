@@ -12,8 +12,10 @@ import br.com.chatbot.chatbot_api.repository.MessageRepository;
 import br.com.chatbot.chatbot_api.service.BotService;
 import br.com.chatbot.chatbot_api.service.ChatService;
 import br.com.chatbot.chatbot_api.service.ConversationService;
+import br.com.chatbot.chatbot_api.service.DocumentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +28,7 @@ public class ChatServiceImpl implements ChatService {
     private final ConversationService conversationService;
     private final MessageMapper messageMapper;
     private final BotService botService;
+    private final DocumentService documentService;
 
     private Conversation resolveConversation(Long conversationId, String firstMessage) {
         if (conversationId == null) {
@@ -53,6 +56,29 @@ public class ChatServiceImpl implements ChatService {
 
         var userMessage = saveMessage(conversation, MessageRole.USER, request.message());
         var ragResult = botService.responseGenerateWithMetadata(request.message());
+        var botMessage = saveMessage(conversation, MessageRole.BOT, ragResult.context());
+
+        return new ChatResponseV2(
+                conversation.getId(),
+                messageMapper.toMessageResponse(userMessage),
+                messageMapper.toMessageResponse(botMessage),
+                ragResult.context(),
+                ragResult.sources(),
+                ragResult.executionTimeMs(),
+                ragResult.chunksConsumed()
+        );
+    }
+
+    @Override
+    public ChatResponseV2 sendMessageWithFile(Long conversationId, String message, MultipartFile file) {
+        var conversation = resolveConversation(conversationId, message);
+
+        if (file != null && !file.isEmpty()) {
+            documentService.upload(file);
+        }
+
+        var userMessage = saveMessage(conversation, MessageRole.USER, message);
+        var ragResult = botService.responseGenerateWithMetadata(message);
         var botMessage = saveMessage(conversation, MessageRole.BOT, ragResult.context());
 
         return new ChatResponseV2(

@@ -1,17 +1,13 @@
 package br.com.chatbot.chatbot_api.service;
 
 import br.com.chatbot.chatbot_api.dto.response.DocumentResponse;
-import br.com.chatbot.chatbot_api.entity.Document;
-import br.com.chatbot.chatbot_api.entity.DocumentChunk;
 import br.com.chatbot.chatbot_api.entity.DocumentStatus;
-import br.com.chatbot.chatbot_api.entity.PGvector;
 import br.com.chatbot.chatbot_api.exception.DocumentProcessingException;
 import br.com.chatbot.chatbot_api.exception.InvalidFileTypeException;
 import br.com.chatbot.chatbot_api.exception.ResourceNotFoundException;
 import br.com.chatbot.chatbot_api.mapper.DocumentMapper;
 import br.com.chatbot.chatbot_api.repository.DocumentRepository;
-import br.com.chatbot.chatbot_api.service.chunking.TextChunker;
-import br.com.chatbot.chatbot_api.service.embedding.EmbeddingService;
+import br.com.chatbot.chatbot_api.service.ingestion.DocumentIngestionService;
 import br.com.chatbot.chatbot_api.service.integration.N8nWebhookNotifier;
 import br.com.chatbot.chatbot_api.service.parser.DocumentFailureRecorder;
 import br.com.chatbot.chatbot_api.service.parser.DocumentParser;
@@ -23,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +30,6 @@ import java.util.Set;
 public class DocumentService {
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("txt", "pdf", "docx");
-    private static final int EXPECTED_EMBEDDING_DIMENSION = 768;
     private static final Map<String, String> CONTENT_TYPE_MAP = Map.of(
             "txt", "text/plain",
             "pdf", "application/pdf",
@@ -43,8 +37,7 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final DocumentMapper documentMapper;
-    private final TextChunker textChunker;
-    private final EmbeddingService embeddingService;
+    private final DocumentIngestionService ingestionService;
     private final N8nWebhookNotifier n8nNotifier;
     private final DocumentFailureRecorder failureRecorder;
     private final Map<String, DocumentParser> parserMap = new HashMap<>();
@@ -77,61 +70,15 @@ public class DocumentService {
 
         log.info("DocumentService: '{}' extraiu {} caracteres", file.getOriginalFilename(), text.length());
 
-        var chunks = textChunker.chunk(text);
-        log.info("DocumentService: '{}' -> {} chunks gerados", file.getOriginalFilename(), chunks.size());
-
-        var document = Document.builder()
-                .fileName(file.getOriginalFilename())
-                .contentType(file.getContentType())
-                .fileSize(file.getSize())
-                .status(DocumentStatus.PROCESSING)
-                // .originalText(text) // COMENTADO: evita OOM — revisar com front se precisam
-                // do texto original
-                .build();
-
-        List<DocumentChunk> documentChunks;
         try {
-            documentChunks = buildChunks(document, chunks);
+            var document = ingestionService.ingestContent(text, file.getOriginalFilename(), file.getContentType());
+            n8nNotifier.notify(document.getId());
+            return documentMapper.toDocumentResponse(document);
         } catch (RuntimeException e) {
-            // Persiste o status FAILED em transação própria, já que esta transação
-            // será revertida pela exceção lançada logo abaixo.
             failureRecorder.recordFailure(file.getOriginalFilename(), file.getContentType(), file.getSize());
             throw new DocumentProcessingException(
                     "Falha ao gerar embeddings para o documento: " + e.getMessage(), e);
         }
-
-        log.info("DocumentService: '{}' -> {} embeddings gerados ({} dimensoes)",
-                file.getOriginalFilename(), documentChunks.size(), EXPECTED_EMBEDDING_DIMENSION);
-
-        document.setChunks(documentChunks);
-        document.setStatus(DocumentStatus.COMPLETED);
-
-        var saved = documentRepository.save(document);
-
-        n8nNotifier.notify(saved.getId());
-
-        return documentMapper.toDocumentResponse(saved);
-    }
-
-    private List<DocumentChunk> buildChunks(Document document, List<String> chunks) {
-        var documentChunks = new ArrayList<DocumentChunk>();
-        for (int i = 0; i < chunks.size(); i++) {
-            var vector = embeddingService.generateEmbedding(chunks.get(i));
-            if (vector.size() != EXPECTED_EMBEDDING_DIMENSION) {
-                throw new DocumentProcessingException(
-                        "Dimensão do embedding inesperada: " + vector.size()
-                                + " (esperado: " + EXPECTED_EMBEDDING_DIMENSION + ")");
-            }
-            var pgVector = new PGvector(vector.stream().mapToDouble(Float::doubleValue).toArray());
-            var chunk = DocumentChunk.builder()
-                    .document(document)
-                    .content(chunks.get(i))
-                    .embedding(pgVector)
-                    .chunkIndex(i)
-                    .build();
-            documentChunks.add(chunk);
-        }
-        return documentChunks;
     }
 
     private String validateFile(MultipartFile file) {
