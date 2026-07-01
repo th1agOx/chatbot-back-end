@@ -19,5 +19,5 @@ public interface ConversationService {
 
     Conversation findConversationOrThrow(Long id);
 
-    Conversation createDefaultConversation();
+    Conversation createDefaultConversation(String firstMessage);
 }

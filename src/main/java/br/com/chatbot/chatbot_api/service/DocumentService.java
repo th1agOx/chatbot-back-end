@@ -16,6 +16,7 @@ import br.com.chatbot.chatbot_api.service.integration.N8nWebhookNotifier;
 import br.com.chatbot.chatbot_api.service.parser.DocumentFailureRecorder;
 import br.com.chatbot.chatbot_api.service.parser.DocumentParser;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DocumentService {
@@ -69,9 +71,14 @@ public class DocumentService {
             text = parser.parse(file.getInputStream());
         } catch (IOException e) {
             throw new DocumentProcessingException("Falha ao ler arquivo: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            throw new DocumentProcessingException("Falha ao processar conteudo do arquivo: " + e.getMessage(), e);
         }
 
+        log.info("DocumentService: '{}' extraiu {} caracteres", file.getOriginalFilename(), text.length());
+
         var chunks = textChunker.chunk(text);
+        log.info("DocumentService: '{}' -> {} chunks gerados", file.getOriginalFilename(), chunks.size());
 
         var document = Document.builder()
                 .fileName(file.getOriginalFilename())
@@ -92,6 +99,9 @@ public class DocumentService {
             throw new DocumentProcessingException(
                     "Falha ao gerar embeddings para o documento: " + e.getMessage(), e);
         }
+
+        log.info("DocumentService: '{}' -> {} embeddings gerados ({} dimensoes)",
+                file.getOriginalFilename(), documentChunks.size(), EXPECTED_EMBEDDING_DIMENSION);
 
         document.setChunks(documentChunks);
         document.setStatus(DocumentStatus.COMPLETED);

@@ -27,16 +27,16 @@ public class ChatServiceImpl implements ChatService {
     private final MessageMapper messageMapper;
     private final BotService botService;
 
-    private Conversation resolveConversation(Long conversationId) {
+    private Conversation resolveConversation(Long conversationId, String firstMessage) {
         if (conversationId == null) {
-            return conversationService.createDefaultConversation();
+            return conversationService.createDefaultConversation(firstMessage);
         }
         return conversationService.findConversationOrThrow(conversationId);
     }
 
     @Override
     public ChatResponse sendMessage(ChatRequest request) {
-        var conversation = resolveConversation(request.conversationId());
+        var conversation = resolveConversation(request.conversationId(), request.message());
 
         var userMessage = saveMessage(conversation, MessageRole.USER, request.message());
         var botAnswer = botService.responseGenerate(request.message());
@@ -49,7 +49,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     public ChatResponseV2 sendMessageV2(ChatRequest request) {
-        var conversation = resolveConversation(request.conversationId());
+        var conversation = resolveConversation(request.conversationId(), request.message());
 
         var userMessage = saveMessage(conversation, MessageRole.USER, request.message());
         var ragResult = botService.responseGenerateWithMetadata(request.message());

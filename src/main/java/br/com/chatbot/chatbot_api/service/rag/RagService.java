@@ -40,6 +40,10 @@ public class RagService {
         log.info("RAG: encontrados {} chunks similares (threshold={}, topK={})",
                 similarChunks.size(), minSimilarity, topK);
 
+        if (similarChunks.isEmpty()) {
+            log.warn("RAG: NENHUM chunk encontrado para a pergunta '{}'", question);
+        }
+
         var contextBuilder = new StringBuilder();
         var sources = new ArrayList<SourceReference>();
         for (var chunk : similarChunks) {

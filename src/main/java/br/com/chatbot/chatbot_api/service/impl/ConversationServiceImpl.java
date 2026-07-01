@@ -64,9 +64,12 @@ public class ConversationServiceImpl implements ConversationService {
     }
 
     @Override
-    public Conversation createDefaultConversation() {
+    public Conversation createDefaultConversation(String firstMessage) {
+        var title = firstMessage.length() > 60
+                ? firstMessage.substring(0, 60) + "..."
+                : firstMessage;
         var conversation = Conversation.builder()
-                .title("Nova Conversa")
+                .title(title)
                 .build();
         return conversationRepository.save(conversation);
     }
