@@ -4,10 +4,12 @@ import br.com.chatbot.chatbot_api.dto.response.SourceReference;
 import br.com.chatbot.chatbot_api.repository.DocumentChunkRepository;
 import br.com.chatbot.chatbot_api.service.embedding.EmbeddingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RagService {
@@ -35,12 +37,25 @@ public class RagService {
         var embeddingString = queryVector.toString();
 
         var similarChunks = chunkRepository.findSimilarChunks(embeddingString, minSimilarity, topK);
+        log.info("RAG: encontrados {} chunks similares (threshold={}, topK={})",
+                similarChunks.size(), minSimilarity, topK);
 
         var contextBuilder = new StringBuilder();
         var sources = new ArrayList<SourceReference>();
         for (var chunk : similarChunks) {
             var content = (String) chunk[2];
-            if (contextBuilder.length() + content.length() > maxContextSize) break;
+            if (contextBuilder.length() + content.length() > maxContextSize) {
+                if (contextBuilder.isEmpty()) {
+                    content = content.substring(0, maxContextSize);
+                    contextBuilder.append(content).append("\n\n");
+                    sources.add(new SourceReference(
+                            ((Number) chunk[1]).longValue(),
+                            (String) chunk[5],
+                            content.substring(0, Math.min(200, content.length()))
+                    ));
+                }
+                break;
+            }
             contextBuilder.append(content).append("\n\n");
             sources.add(new SourceReference(
                     ((Number) chunk[1]).longValue(),
@@ -50,6 +65,8 @@ public class RagService {
         }
 
         var elapsed = System.currentTimeMillis() - startTime;
+        log.info("RAG: contexto montado com {} chars, {} fontes em {}ms",
+                contextBuilder.length(), sources.size(), elapsed);
 
         return new RagResult(
                 contextBuilder.toString(),
