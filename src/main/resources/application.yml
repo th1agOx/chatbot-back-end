@@ -27,9 +27,11 @@ spring:
       chat:
         options:
           model: llama3.2:1b
+          timeout: 30s
       embedding:
         options:
           model: nomic-embed-text
+          timeout: 30s
 
   servlet:
     multipart:
@@ -41,7 +43,7 @@ app:
     webhook-url: ${N8N_WEBHOOK_URL}
   rag:
     top-k: 5
-    min-similarity: 0.75
+    min-similarity: 0.5
     max-context-size: 2000
 
 springdoc:
