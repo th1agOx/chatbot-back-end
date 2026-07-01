@@ -6,5 +6,7 @@ public record ConversationResponse(
         Long id,
         String title,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Long messageCount,
+        LocalDateTime lastMessageAt
 ) {}

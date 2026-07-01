@@ -32,7 +32,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     public List<ConversationResponse> findAll() {
-        return conversationRepository.findAll()
+        return conversationRepository.findAllWithMessages()
                 .stream()
                 .map(conversationMapper::toConversationResponse)
                 .toList();
@@ -40,7 +40,8 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     public ConversationResponse findById(Long id) {
-        var conversation = findConversationOrThrow(id);
+        var conversation = conversationRepository.findWithMessagesById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Historico de conversa não encontrado com id: " + id));
         return conversationMapper.toConversationResponse(conversation);
     }
 

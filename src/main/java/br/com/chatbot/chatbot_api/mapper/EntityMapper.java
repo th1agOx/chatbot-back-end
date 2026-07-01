@@ -16,7 +16,9 @@ public class EntityMapper {
                 conversation.getId(),
                 conversation.getTitle(),
                 conversation.getCreatedAt(),
-                conversation.getUpdatedAt()
+                conversation.getUpdatedAt(),
+                conversation.getMessageCount(),
+                conversation.getLastMessageAt()
         );
     }
 

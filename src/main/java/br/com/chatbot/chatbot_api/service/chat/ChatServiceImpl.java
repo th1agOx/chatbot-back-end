@@ -108,6 +108,7 @@ public class ChatServiceImpl implements ChatService {
                 .role(role)
                 .content(content)
                 .build();
+        conversation.setUpdatedAt(LocalDateTime.now());
         return messageRepository.save(message);
     }
 }

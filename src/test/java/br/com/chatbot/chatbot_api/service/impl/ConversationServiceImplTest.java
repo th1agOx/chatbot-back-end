@@ -41,7 +41,8 @@ class ConversationServiceImplTest {
         when(conversationMapper.toConversationResponse(any())).then(invocation -> {
             var c = invocation.getArgument(0, Conversation.class);
             return new br.com.chatbot.chatbot_api.dto.response.ConversationResponse(
-                    c.getId(), c.getTitle(), c.getCreatedAt(), c.getUpdatedAt());
+                    c.getId(), c.getTitle(), c.getCreatedAt(), c.getUpdatedAt(),
+                    c.getMessageCount(), c.getLastMessageAt());
         });
 
         var response = conversationService.create(request);
@@ -50,7 +51,7 @@ class ConversationServiceImplTest {
 
     @Test
     void findById_WhenNotFound_ShouldThrowException() {
-        when(conversationRepository.findById(99L)).thenReturn(Optional.empty());
+        when(conversationRepository.findWithMessagesById(99L)).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> conversationService.findById(99L));
     }
 }
