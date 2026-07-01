@@ -14,19 +14,23 @@ public class N8nWebhookNotifier {
 
     private static final Logger log = LoggerFactory.getLogger(N8nWebhookNotifier.class);
 
-    @Value("${app.n8n.webhook-url}")
+    @Value("${app.n8n.webhook-url:#{null}}")
     private String webhookUrl;
 
     private final RestTemplate restTemplate;
 
     @Async
     public void notify(Long documentId) {
+        if (webhookUrl == null || webhookUrl.isBlank()) {
+            log.debug("n8n webhook não configurado — notificação ignorada para documento {}", documentId);
+            return;
+        }
         try {
             var payload = new N8nPayload(documentId);
             restTemplate.postForEntity(webhookUrl, payload, String.class);
             log.info("n8n notificado para documento {}", documentId);
         } catch (Exception e) {
-            log.error("Falha ao notificar n8n para documento {}: {}", documentId, e.getMessage());
+            log.warn("Falha ao notificar n8n para documento {}: {}", documentId, e.getMessage());
         }
     }
 

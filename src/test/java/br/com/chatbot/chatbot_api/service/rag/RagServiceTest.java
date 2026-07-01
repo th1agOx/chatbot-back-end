@@ -1,7 +1,6 @@
 package br.com.chatbot.chatbot_api.service.rag;
 
 import br.com.chatbot.chatbot_api.dto.response.SourceReference;
-import br.com.chatbot.chatbot_api.repository.ChunkSimilarityProjection;
 import br.com.chatbot.chatbot_api.repository.DocumentChunkRepository;
 import br.com.chatbot.chatbot_api.service.embedding.EmbeddingService;
 import org.junit.jupiter.api.Test;
@@ -10,6 +9,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,21 +32,25 @@ class RagServiceTest {
     @InjectMocks
     private RagService ragService;
 
+    private Object[] createMockChunk(UUID id, Long documentId, String content, Integer chunkIndex, String documentName, Double similarity) {
+        return new Object[]{
+                id,
+                documentId,
+                content,
+                chunkIndex,
+                LocalDateTime.now(),
+                documentName,
+                similarity
+        };
+    }
+
     @Test
     void retrieveContext_ValidQuestion_ReturnsRagResult() {
         when(embeddingService.generateEmbedding("pergunta")).thenReturn(List.of(0.1f, 0.2f, 0.3f));
 
-        var mockChunk = new ChunkSimilarityProjection() {
-            @Override public UUID getId() { return UUID.randomUUID(); }
-            @Override public Long getDocumentId() { return 1L; }
-            @Override public String getDocumentName() { return "doc.txt"; }
-            @Override public String getContent() { return "conteúdo do chunk"; }
-            @Override public Integer getChunkIndex() { return 0; }
-            @Override public java.time.LocalDateTime getCreatedAt() { return java.time.LocalDateTime.now(); }
-            @Override public Double getSimilarity() { return 0.95; }
-        };
+        var mockChunk = createMockChunk(UUID.randomUUID(), 1L, "conteúdo do chunk", 0, "doc.txt", 0.95);
 
-        when(chunkRepository.findSimilarChunks(any(), anyInt(), anyDouble())).thenReturn(List.of(mockChunk));
+        when(chunkRepository.findSimilarChunks(any(), anyDouble(), anyInt())).thenReturn(Collections.singletonList(mockChunk));
 
         var result = ragService.retrieveContext("pergunta", 5, 0.75, 4000);
         assertNotNull(result);
@@ -61,26 +66,10 @@ class RagServiceTest {
     void retrieveContext_ExceedsMaxSize_TruncatesContext() {
         when(embeddingService.generateEmbedding("pergunta")).thenReturn(List.of(0.1f, 0.2f, 0.3f));
 
-        var chunk1 = new ChunkSimilarityProjection() {
-            @Override public UUID getId() { return UUID.randomUUID(); }
-            @Override public Long getDocumentId() { return 1L; }
-            @Override public String getDocumentName() { return "doc.txt"; }
-            @Override public String getContent() { return "a".repeat(3000); }
-            @Override public Integer getChunkIndex() { return 0; }
-            @Override public java.time.LocalDateTime getCreatedAt() { return java.time.LocalDateTime.now(); }
-            @Override public Double getSimilarity() { return 0.95; }
-        };
-        var chunk2 = new ChunkSimilarityProjection() {
-            @Override public UUID getId() { return UUID.randomUUID(); }
-            @Override public Long getDocumentId() { return 1L; }
-            @Override public String getDocumentName() { return "doc.txt"; }
-            @Override public String getContent() { return "a".repeat(3000); }
-            @Override public Integer getChunkIndex() { return 1; }
-            @Override public java.time.LocalDateTime getCreatedAt() { return java.time.LocalDateTime.now(); }
-            @Override public Double getSimilarity() { return 0.90; }
-        };
+        var chunk1 = createMockChunk(UUID.randomUUID(), 1L, "a".repeat(3000), 0, "doc.txt", 0.95);
+        var chunk2 = createMockChunk(UUID.randomUUID(), 1L, "a".repeat(3000), 1, "doc.txt", 0.90);
 
-        when(chunkRepository.findSimilarChunks(any(), anyInt(), anyDouble())).thenReturn(List.of(chunk1, chunk2));
+        when(chunkRepository.findSimilarChunks(any(), anyDouble(), anyInt())).thenReturn(List.of(chunk1, chunk2));
 
         var result = ragService.retrieveContext("pergunta", 5, 0.75, 4000);
         assertNotNull(result);

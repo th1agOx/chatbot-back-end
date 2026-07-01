@@ -5,8 +5,8 @@ import br.com.chatbot.chatbot_api.service.rag.RagResult;
 import br.com.chatbot.chatbot_api.service.rag.RagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.ollama.OllamaChatModel;
+import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BotServiceImpl implements BotService {
 
-    private final OpenAiChatModel chatModel;
+    private final OllamaChatModel chatModel;
     private final RagService ragService;
 
     @Value("${app.rag.top-k}")
@@ -26,7 +26,7 @@ public class BotServiceImpl implements BotService {
     @Value("${app.rag.max-context-size}")
     private int maxContextSize;
 
-    @Value("${spring.ai.openai.chat.options.model}")
+    @Value("${spring.ai.ollama.chat.options.model}")
     private String chatModelId;
 
     @Override
@@ -39,7 +39,7 @@ public class BotServiceImpl implements BotService {
         var prompt = buildPrompt(ragResult.context(), userMessage);
         var response = chatModel.call(
                 new Prompt(prompt,
-                        OpenAiChatOptions.builder()
+                        OllamaOptions.builder()
                                 .model(chatModelId)
                                 .build())
         );

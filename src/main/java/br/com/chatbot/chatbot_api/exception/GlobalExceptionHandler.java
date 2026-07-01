@@ -4,6 +4,7 @@ import br.com.chatbot.chatbot_api.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -82,6 +83,20 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
+    }
+
+    @ExceptionHandler(NonTransientAiException.class)
+    public ResponseEntity<ErrorResponse> handleAiNonTransient(
+            NonTransientAiException ex, HttpServletRequest request) {
+        log.warn("AI service temporarily unavailable at {}: {}", request.getRequestURI(), ex.getMessage());
+        var response = new ErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                "Service Unavailable",
+                "Serviço temporariamente indisponível, tente novamente em alguns segundos",
+                request.getRequestURI(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

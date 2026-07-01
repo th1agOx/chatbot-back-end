@@ -33,6 +33,7 @@ import java.util.Set;
 public class DocumentService {
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("txt", "pdf", "docx");
+    private static final int EXPECTED_EMBEDDING_DIMENSION = 1536;
     private static final Map<String, String> CONTENT_TYPE_MAP = Map.of(
             "txt", "text/plain",
             "pdf", "application/pdf",
@@ -106,6 +107,11 @@ public class DocumentService {
         var documentChunks = new ArrayList<DocumentChunk>();
         for (int i = 0; i < chunks.size(); i++) {
             var vector = embeddingService.generateEmbedding(chunks.get(i));
+            if (vector.size() != EXPECTED_EMBEDDING_DIMENSION) {
+                throw new DocumentProcessingException(
+                        "Dimensão do embedding inesperada: " + vector.size()
+                                + " (esperado: " + EXPECTED_EMBEDDING_DIMENSION + ")");
+            }
             var pgVector = new PGvector(vector.stream().mapToDouble(Float::doubleValue).toArray());
             var chunk = DocumentChunk.builder()
                     .document(document)

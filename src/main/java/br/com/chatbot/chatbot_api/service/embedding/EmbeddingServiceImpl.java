@@ -2,8 +2,8 @@ package br.com.chatbot.chatbot_api.service.embedding;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.embedding.EmbeddingRequest;
-import org.springframework.ai.openai.OpenAiEmbeddingModel;
-import org.springframework.ai.openai.OpenAiEmbeddingOptions;
+import org.springframework.ai.ollama.OllamaEmbeddingModel;
+import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,14 +14,14 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class EmbeddingServiceImpl implements EmbeddingService {
 
-    private final OpenAiEmbeddingModel embeddingModel;
+    private final OllamaEmbeddingModel embeddingModel;
 
-    @Value("${spring.ai.openai.embedding.options.model}")
+    @Value("${spring.ai.ollama.embedding.options.model}")
     private String embeddingModelId;
 
     @Override
     public List<Float> generateEmbedding(String text) {
-        var options = OpenAiEmbeddingOptions.builder()
+        var options = OllamaOptions.builder()
                 .model(embeddingModelId)
                 .build();
         var request = new EmbeddingRequest(List.of(text), options);

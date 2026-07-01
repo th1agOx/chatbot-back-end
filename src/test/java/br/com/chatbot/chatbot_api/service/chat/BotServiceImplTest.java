@@ -14,7 +14,7 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.ollama.OllamaChatModel;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 class BotServiceImplTest {
 
     @Mock
-    private OpenAiChatModel chatModel;
+    private OllamaChatModel chatModel;
 
     @Mock
     private RagService ragService;
@@ -39,7 +39,7 @@ class BotServiceImplTest {
         ReflectionTestUtils.setField(botService, "topK", 5);
         ReflectionTestUtils.setField(botService, "minSimilarity", 0.75);
         ReflectionTestUtils.setField(botService, "maxContextSize", 4000);
-        ReflectionTestUtils.setField(botService, "chatModelId", "gpt-4o");
+        ReflectionTestUtils.setField(botService, "chatModelId", "llama3.2:1b");
     }
 
     @Test

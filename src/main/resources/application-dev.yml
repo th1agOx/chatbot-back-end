@@ -1,0 +1,3 @@
+app:
+  n8n:
+    webhook-url: ""

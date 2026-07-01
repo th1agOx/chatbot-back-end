@@ -1,0 +1,7 @@
+spring:
+  flyway:
+    validate-on-migrate: true
+
+app:
+  n8n:
+    webhook-url: ${N8N_WEBHOOK_URL}

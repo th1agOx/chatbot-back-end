@@ -1,7 +1,6 @@
 package br.com.chatbot.chatbot_api.service.rag;
 
 import br.com.chatbot.chatbot_api.dto.response.SourceReference;
-import br.com.chatbot.chatbot_api.entity.PGvector;
 import br.com.chatbot.chatbot_api.repository.DocumentChunkRepository;
 import br.com.chatbot.chatbot_api.service.embedding.EmbeddingService;
 import lombok.RequiredArgsConstructor;
@@ -33,19 +32,20 @@ public class RagService {
         var startTime = System.currentTimeMillis();
 
         var queryVector = embeddingService.generateEmbedding(question);
-        var pgVector = new PGvector(queryVector.stream().mapToDouble(Float::doubleValue).toArray());
+        var embeddingString = queryVector.toString();
 
-        var similarChunks = chunkRepository.findSimilarChunks(pgVector, topK, minSimilarity);
+        var similarChunks = chunkRepository.findSimilarChunks(embeddingString, minSimilarity, topK);
 
         var contextBuilder = new StringBuilder();
         var sources = new ArrayList<SourceReference>();
         for (var chunk : similarChunks) {
-            if (contextBuilder.length() + chunk.getContent().length() > maxContextSize) break;
-            contextBuilder.append(chunk.getContent()).append("\n\n");
+            var content = (String) chunk[2];
+            if (contextBuilder.length() + content.length() > maxContextSize) break;
+            contextBuilder.append(content).append("\n\n");
             sources.add(new SourceReference(
-                    chunk.getDocumentId(),
-                    chunk.getDocumentName(),
-                    chunk.getContent().substring(0, Math.min(200, chunk.getContent().length()))
+                    ((Number) chunk[1]).longValue(),
+                    (String) chunk[5],
+                    content.substring(0, Math.min(200, content.length()))
             ));
         }
 

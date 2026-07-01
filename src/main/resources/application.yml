@@ -22,16 +22,14 @@ spring:
     validate-on-migrate: false
 
   ai:
-    openai:
-      api-key: ${OPEN_ROUTER_API_KEY}
-      base-url: https://openrouter.ai/api
+    ollama:
+      base-url: http://localhost:11434
       chat:
         options:
-          model: google/gemma-2-9b-it:free
+          model: llama3.2:1b
       embedding:
-        base-url: https://openrouter.ai/api/v1
         options:
-          model: openai/text-embedding-3-small
+          model: nomic-embed-text
 
   servlet:
     multipart:
