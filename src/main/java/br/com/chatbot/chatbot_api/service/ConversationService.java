@@ -16,4 +16,6 @@ public interface ConversationService {
     void deleteById(Long id);
 
     Conversation findConversationOrThrow(Long id);
+
+    Conversation createDefaultConversation();
 }

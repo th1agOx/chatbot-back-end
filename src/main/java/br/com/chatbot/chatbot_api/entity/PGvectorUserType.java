@@ -6,7 +6,6 @@ import org.hibernate.usertype.UserType;
 import java.io.Serializable;
 import java.sql.*;
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
 public class PGvectorUserType implements UserType<PGvector> {
 
@@ -53,11 +52,8 @@ public class PGvectorUserType implements UserType<PGvector> {
             st.setNull(index, Types.OTHER);
             return;
         }
-        var vector = st.getConnection().createArrayOf("float8",
-                IntStream.range(0, value.getVector().length)
-                        .mapToObj(i -> (double) value.getVector()[i])
-                        .toArray());
-        st.setObject(index, vector, Types.OTHER);
+        var vectorStr = Arrays.toString(value.getVector());
+        st.setObject(index, vectorStr, Types.OTHER);
     }
 
     @Override

@@ -4,6 +4,7 @@ import br.com.chatbot.chatbot_api.dto.request.ChatRequest;
 import br.com.chatbot.chatbot_api.dto.response.ChatResponse;
 import br.com.chatbot.chatbot_api.dto.response.ChatResponseV2;
 import br.com.chatbot.chatbot_api.dto.response.MessageResponse;
+import br.com.chatbot.chatbot_api.entity.Conversation;
 import br.com.chatbot.chatbot_api.entity.Message;
 import br.com.chatbot.chatbot_api.enums.MessageRole;
 import br.com.chatbot.chatbot_api.mapper.MessageMapper;
@@ -26,27 +27,36 @@ public class ChatServiceImpl implements ChatService {
     private final MessageMapper messageMapper;
     private final BotService botService;
 
+    private Conversation resolveConversation(Long conversationId) {
+        if (conversationId == null) {
+            return conversationService.createDefaultConversation();
+        }
+        return conversationService.findConversationOrThrow(conversationId);
+    }
+
     @Override
     public ChatResponse sendMessage(ChatRequest request) {
-        var conversation = conversationService.findConversationOrThrow(request.conversationId());
+        var conversation = resolveConversation(request.conversationId());
 
         var userMessage = saveMessage(conversation, MessageRole.USER, request.message());
         var botAnswer = botService.responseGenerate(request.message());
         var botMessage = saveMessage(conversation, MessageRole.BOT, botAnswer);
 
         return new ChatResponse(
+                conversation.getId(),
                 messageMapper.toMessageResponse(userMessage),
                 messageMapper.toMessageResponse(botMessage));
     }
 
     public ChatResponseV2 sendMessageV2(ChatRequest request) {
-        var conversation = conversationService.findConversationOrThrow(request.conversationId());
+        var conversation = resolveConversation(request.conversationId());
 
         var userMessage = saveMessage(conversation, MessageRole.USER, request.message());
         var ragResult = botService.responseGenerateWithMetadata(request.message());
         var botMessage = saveMessage(conversation, MessageRole.BOT, ragResult.context());
 
         return new ChatResponseV2(
+                conversation.getId(),
                 messageMapper.toMessageResponse(userMessage),
                 messageMapper.toMessageResponse(botMessage),
                 ragResult.context(),
@@ -65,7 +75,7 @@ public class ChatServiceImpl implements ChatService {
                 .toList();
     }
 
-    private Message saveMessage(br.com.chatbot.chatbot_api.entity.Conversation conversation,
+    private Message saveMessage(Conversation conversation,
                                 MessageRole role, String content) {
         var message = Message.builder()
                 .conversation(conversation)

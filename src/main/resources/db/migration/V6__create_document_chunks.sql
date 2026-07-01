@@ -4,7 +4,7 @@ CREATE TABLE document_chunks (
     id UUID PRIMARY KEY,
     document_id BIGINT NOT NULL,
     content TEXT NOT NULL,
-    embedding vector(768) NOT NULL,
+    embedding vector(1536) NOT NULL,
     chunk_index INTEGER NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_chunks_document FOREIGN KEY (document_id)

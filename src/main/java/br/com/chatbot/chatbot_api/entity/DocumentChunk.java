@@ -41,7 +41,7 @@ public class DocumentChunk {
     private String content;
 
     @Type(PGvectorUserType.class)
-    @Column(name = "embedding", columnDefinition = "vector(768)", nullable = false)
+    @Column(name = "embedding", columnDefinition = "vector(1536)", nullable = false)
     private PGvector embedding;
 
     @Column(name = "chunk_index", nullable = false)

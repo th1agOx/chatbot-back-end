@@ -55,4 +55,12 @@ public class ConversationServiceImpl implements ConversationService {
         return conversationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Historico de conversa não encontrado com id: " + id));
     }
+
+    @Override
+    public Conversation createDefaultConversation() {
+        var conversation = Conversation.builder()
+                .title("Nova Conversa")
+                .build();
+        return conversationRepository.save(conversation);
+    }
 }
